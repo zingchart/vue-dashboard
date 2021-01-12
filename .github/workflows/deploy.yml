@@ -32,13 +32,13 @@ jobs:
         run: npm ci
       - name: Build js and modules
         run: npm run build
-    - name: Deploy page
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./dist
-        user_name: 'github-actions[bot]'
-        user_email: 'github-actions[bot]@users.noreply.github.com'
-        destination_dir: /
-        keep_files: false
- 
+      - name: Deploy page
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist 
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          destination_dir: /
+          keep_files: false
+  
