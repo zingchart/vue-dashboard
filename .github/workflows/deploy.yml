@@ -37,6 +37,6 @@ jobs:
           publish_dir: ./dist 
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
-          destination_dir: /
+          destination_dir: ./
           keep_files: false
   
