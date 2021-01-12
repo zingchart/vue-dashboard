@@ -1,24 +1,15 @@
-# vue-dashboard-2
+# Vue Dashboard Example
+A Dashboard for the Vue.js framework build with ZingChart and ZingGrid
 
-## Project setup
-```
-npm install
-```
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## Instructions
 
-### Compiles and minifies for production
-```
-npm run build
-```
+1. Build the package
+`$ npm run build`
 
-### Lints and fixes files
-```
-npm run lint
-```
+2. The output application will be generated in the /dist folder.
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+
+## Development
+
+`$ npm run serve`
