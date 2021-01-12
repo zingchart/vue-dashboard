@@ -4,8 +4,6 @@ name: deploy
 # always run local unit tests except on master branch
 on: 
   push:
-    branches-ignore:
-      - master
   # run tests BEFORE merging dev -> master
   pull_request:
     branches:
