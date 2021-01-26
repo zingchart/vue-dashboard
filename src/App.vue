@@ -166,6 +166,18 @@ a.router-link-exact-active {
 	left: 0.25em;
 	transform: rotate(-135deg);
 }
+
+@media only screen and (max-width: 700px) {
+  .content__col {
+    width: 100%;
+    min-width: inherit;
+    max-width: inherit;
+  }
+  .cell {
+    width: 100%;
+    overflow: scroll;
+  }
+}
 </style>
 <script>
 import rawTransactions from "./dataset/transactions.js";
