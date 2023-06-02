@@ -1,20 +1,21 @@
-<template>
-  <zingchart :data="chartConfig" :theme="theme" :width="width" :height="'100%'" />
-</template>
+<script setup>
+  import { computed } from 'vue';
+  import theme from '../theme/theme.js';
 
-<script>
-import theme from "../theme/theme.js";
-export default {
-  props: ["data", "width"],
-  data() {
-    return {
-      theme
-    };
-  },
-  computed: {
-    salesPerMonth() {
-      let types = ["referral", "organic", "marketing", "legacy", "unknown"];
-      this.data.map(customer => {
+  const props = defineProps({
+    data: {
+      type: Array,
+      required: false
+    },
+    width: {
+      type: String,
+      required: false
+    },
+  });
+
+  let salesPerMonth = computed(() => {
+    let types = ['referral', 'organic', 'marketing', 'legacy', 'unknown'];
+      props.data.map(customer => {
         if (parseInt(Math.random() * 10) % 2 === 0) {
           customer.acquisition = types[parseInt(Math.random() * 2)];
         } else {
@@ -27,7 +28,7 @@ export default {
       const currentYear = new Date().getFullYear();
 
       // Loop through all the customers and bucket each sale by month
-      this.data.forEach(customer => {
+      props.data.forEach(customer => {
         let customerTotal = 0;
         customer.products.forEach(product => {
           // Check the paid date if its within the calendar year.
@@ -38,53 +39,56 @@ export default {
         });
       });
       return monthSales;
-    },
-    chartConfig() {
-      return {
-        type: "area",
-        title: {
-          text: "Daily Campaign Tracker",
-          align: "left",
-          margin: 0
+  });
+  
+  let chartConfig = computed(() => {
+    return {
+      type: 'area',
+      title: {
+        text: 'Daily Campaign Tracker',
+        align: 'left',
+        margin: 0
+      },
+      series: [
+        {
+          values: [24, 54, 43, 65, 76, 34, 34],
+          text: 'Twitter'
         },
-        series: [
-          {
-            values: [24, 54, 43, 65, 76, 34, 34],
-            text: "Twitter"
-          },
-          {
-            values: [54, 68, 43, 46, 43, 46, 89],
-            text: "Facebook"
-          },
-          {
-            values: [23, 53, 43, 13, 68, 35, 34],
-            text: "Keywords"
-          }
-        ],
-        legend: {},
-        crosshairX: {},
-        tooltip: { visible: false },
-        plot: {
-          stacked: true
+        {
+          values: [54, 68, 43, 46, 43, 46, 89],
+          text: 'Facebook'
         },
-        plotarea: {
-          margin: "35 20 60 50"
-        },
-        scaleX: {
-          labels: ["Mon", "Tue", "Weds", "Thurs", "Fri", "Sat", "Sun"]
-        },
-        scaleY: {
-          label: {
-            text: "Number of inbound visits"
-          }
+        {
+          values: [23, 53, 43, 13, 68, 35, 34],
+          text: 'Keywords'
         }
-      };
-    }
-  }
-};
+      ],
+      legend: {},
+      crosshairX: {},
+      tooltip: { visible: false },
+      plot: {
+        stacked: true
+      },
+      plotarea: {
+        margin: '35 20 60 50'
+      },
+      scaleX: {
+        labels: ['Mon', 'Tue', 'Weds', 'Thurs', 'Fri', 'Sat', 'Sun']
+      },
+      scaleY: {
+        label: {
+          text: 'Number of inbound visits'
+        }
+      }
+    };
+  });
 
-function firstDayOfTheCurrentYear() {
-  const today = new Date();
-  return new Date("1/1/" + today.getFullYear()).getTime();
-}
+  function firstDayOfTheCurrentYear() {
+    const today = new Date();
+    return new Date('1/1/' + today.getFullYear()).getTime();
+  }
 </script>
+
+<template>
+  <ZingChart :data="chartConfig" :theme="theme" :width="width" :height="'100%'" />
+</template>

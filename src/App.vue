@@ -1,3 +1,63 @@
+<script setup>
+  import { computed, ref } from 'vue';
+
+  import rawTransactions from "./dataset/transactions.js";
+  import TotalSalesPerMonth from "./components/TotalSalesPerMonth.vue";
+  import YearToDate from "./components/YearToDate.vue";
+  import TransactionBreakdown from "./components/TransactionBreakdown.vue";
+  import LatestTransactions from "./components/LatestTransactions.vue";
+  import LatestTransactionsGrid from "./components/LatestTransactionsGrid.vue";
+  import TotalSalesSpark from "./components/TotalSalesSpark.vue";
+  import TotalYTDSpark from "./components/TotalYTDSpark.vue";
+  import ChangeCustomersSpark from "./components/ChangeCustomersSpark.vue";
+
+  let latestTransactions = ref();
+  let transactionBreakdown = ref();
+
+  let range = ref({
+    start: new Date(2019, 0, 1), 
+    end: new Date(2019, 9, 8) 
+  });
+
+  let transactions = computed(() => {
+    return rawTransactions.filter(entry => {
+      return (
+        entry.timestamp >= range.value.start.getTime() &&
+        entry.timestamp < range.value.end.getTime()
+      );
+    })
+  });
+
+  // Limit by the last 30 days
+  let last30DaysTransactions = computed(() => {
+    let THIRTY_DAYS = 1000 * 60 * 60 * 24 * 30;
+    return transactions.value.filter(entry => 
+      range.value.end.getTime() - entry.timestamp < THIRTY_DAYS);
+  });
+
+  function handleRowHover(e) {
+    // Set a guide on the LatestTransactions line chart to the corresponding row
+    const chartId = latestTransactions.value.id;
+    zingchart.exec(chartId, 'setguide', {
+      keyvalue : e.detail.ZGData.data.timestamp,
+    });
+
+    // Set a hoverState on the LatestTransactions pie chart
+    const pieId = transactionBreakdown.value.id;
+
+    // Determine the node index that corresponds to the transaction type
+    const data = zingchart.exec(pieId, 'getseriesdata');
+    const index = data.findIndex((o) => {
+      return o.text === e.detail.ZGData.data.purchase_type;
+    });
+
+    zingchart.exec(pieId, 'showhoverstate', {
+      plotindex: index,
+      nodeindex: 0,
+    });
+  };
+</script>
+
 <template>
   <div id="app">
     <div class="dashboard">
@@ -5,37 +65,44 @@
         <h1>Your Sales Dashboard</h1>
         <section style="display: flex; align-items: center; margin-right: 26px;">
           <div style="margin-right:10px">Showing data from</div>
-          <v-date-picker mode="range" v-model="range" :popover="{placement:'bottom-end'}" />
+          <!-- <VDatePicker v-model.range="range" :hide-time-header="true" :popover="{placement:'bottom-end'}" /> -->
+          <VDatePicker v-model.range="range">
+            <template #default="{ togglePopover }">
+              <button @click="togglePopover">
+                Select date
+              </button>
+            </template>
+          </VDatePicker>
         </section>
       </header>
       <div class="dashboard">
         <section class="dashboard__summary">
-          <total-sales-spark :values="transactions" :start="range.start" :end="range.end"/>
-          <total-ytd-spark :values="transactions" :start="range.start" :end="range.end"/>
-          <change-customers-spark :values="transactions"/>
+          <TotalSalesSpark :values="transactions" :start="range.start" :end="range.end" />
+          <TotalYTDSpark :values="transactions" :start="range.start" :end="range.end" />
+          <ChangeCustomersSpark :values="transactions" />
         </section>
         <section class="content">
           <div class="content__col">
             <div class="content__row">
               <div class="cell" style="flex:2;">
-                <latest-transactions ref="latestTransactions" :data="last30DaysTransactions" />
+                <LatestTransactions ref="latestTransactions" :data="last30DaysTransactions" />
               </div>
               <div class="cell">
-                <transaction-breakdown ref="transactionBreakdown" :data="transactions" />
+                <TransactionBreakdown ref="transactionBreakdown" :data="transactions" />
               </div>
             </div>
             <div class="content__row">
               <div class="cell">
-                <latest-transactions-grid :data="last30DaysTransactions" @mouseover="handleRowHover"/>
+                <LatestTransactionsGrid :data="last30DaysTransactions" @mouseover="handleRowHover" />
               </div>
             </div>
           </div>
           <div class="content__col">
             <div class="cell">
-              <total-sales-per-month :data="transactions" />
+              <TotalSalesPerMonth :data="transactions" />
             </div>
             <div class="cell">
-              <year-to-date :data="transactions" />
+              <YearToDate :data="transactions" />
             </div>
           </div>
         </section>
@@ -43,6 +110,7 @@
     </div>
   </div>
 </template>
+
 <style>
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
@@ -179,79 +247,3 @@ a.router-link-exact-active {
   }
 }
 </style>
-<script>
-import rawTransactions from "./dataset/transactions.js";
-import TotalSalesPerMonth from "./components/TotalSalesPerMonth.vue";
-import YearToDate from "./components/YearToDate.vue";
-import TransactionBreakdown from "./components/TransactionBreakdown.vue";
-import LatestTransactions from "./components/LatestTransactions.vue";
-import LatestTransactionsGrid from "./components/LatestTransactionsGrid.vue";
-import TotalSalesSpark from "./components/TotalSalesSpark.vue";
-import TotalYTDSpark from "./components/TotalYTDSpark.vue";
-import ChangeCustomersSpark from "./components/ChangeCustomersSpark.vue";
-
-export default {
-  name: "app",
-  components: {
-    LatestTransactions,
-    LatestTransactionsGrid,
-    TotalSalesPerMonth,
-    YearToDate,
-    TransactionBreakdown,
-    TotalSalesSpark,
-    "total-ytd-spark": TotalYTDSpark,
-    ChangeCustomersSpark
-  },
-  computed: {
-    transactions() {
-      return this.rawTransactions.filter(entry => {
-        return (
-          entry.timestamp >= this.range.start.getTime() &&
-          entry.timestamp < this.range.end.getTime()
-        );
-      });
-    },
-    // Limit by the last 30 days
-    last30DaysTransactions() {
-      let THIRTY_DAYS = 1000 * 60 * 60 * 24 * 30;
-      return this.transactions.filter(entry => 
-        this.range.end.getTime() - entry.timestamp < THIRTY_DAYS);
-    }
-  },
-  methods: {
-    handleRowHover(e) {
-      // Set a guide on the LatestTransactions line chart to the corresponding row
-      let ltChart = this.$refs.latestTransactions;
-      const chartId = ltChart.$children[0].$el.getAttribute('id');
-      window.zingchart.exec(chartId, 'setguide', {
-        keyvalue : e.detail.ZGData.data.timestamp,
-      });
-
-      // Set a hoverState on the LatestTransactions pie chart
-      let ltPie = this.$refs.transactionBreakdown;
-      const pieId = ltPie.$children[0].$el.getAttribute('id');
-
-      // Determine the node index that corresponds to the transaction type
-      const data = window.zingchart.exec(pieId, 'getseriesdata');
-      const index = data.findIndex((o) => {
-        return o.text === e.detail.ZGData.data.purchase_type;
-      });
-
-     window.zingchart.exec(pieId, 'showhoverstate', {
-        plotindex: index,
-        nodeindex: 0,
-      });
-    },
-  },
-  data() {
-    return {
-      rawTransactions,
-      range: {
-        start: new Date(2019, 0, 1), 
-        end: new Date(2019, 9, 8) 
-      }
-    };
-  }
-};
-</script>
-

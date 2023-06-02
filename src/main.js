@@ -1,20 +1,15 @@
- /* eslint-disable */
-import Vue from 'vue'
-import App from './App.vue'
+import { createApp } from 'vue';
+import App from './App.vue';
 
-Vue.config.productionTip = false;
+const app = createApp(App);
 
-// import the es6 version
-import 'zingchart/es6';
-// import the component AFTER ZingChart since it is a DIRECT dependency
-import zingchartVue from 'zingchart-vue';
-Vue.component('zingchart', zingchartVue);
+import ZingChartVue from 'zingchart-vue';
+app.component('ZingChart', ZingChartVue);
 
-import VCalendar from 'v-calendar';
-Vue.use(VCalendar);
+import { DatePicker } from 'v-calendar';
+import 'v-calendar/style.css';
+app.component('VDatePicker', DatePicker);
 
-import ZingGrid from "zinggrid";
+import ZingGrid from 'zinggrid';
 
-new Vue({
-  render: h => h(App),
-}).$mount('#app')
+app.mount('#app');

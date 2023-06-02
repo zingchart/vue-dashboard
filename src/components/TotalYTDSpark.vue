@@ -1,21 +1,7 @@
-<template>
-  <div class="scorecard" @mouseleave="setGuide">
-    <zingchart
-      ref="chart"
-      :data="chart"
-      :values="accumulatedValues"
-      :width="100"
-      :height="50"
-      @guide_mousemove="changeValue"
-    />
-    <div class="scorecard__value">{{currentValue}}</div>
-    <div class="scorecard__header">Total Sales this Year</div>
-  </div>
-</template>
+<script setup>
+  import { computed, onMounted, ref, watch } from 'vue';
 
-<script>
-export default {
-  props: {
+  const props = defineProps({
     values: {
       type: Array,
       required: false
@@ -26,7 +12,7 @@ export default {
     },
     type: {
       type: String,
-      default: "line"
+      default: 'line'
     },
     start: {
       type: Date
@@ -34,103 +20,115 @@ export default {
     end: {
       type: Date
     }
-  },
-  methods: {
-    formatValue(value) {
-      return `$${value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, "$&,")}`;
-    },
-    changeValue(e) {
-      this.currentValue = this.formatValue(e.items[0].value);
-    },
-    setGuide() {
-      window.zingchart.exec(this.$refs.chart.$el.getAttribute("id"), "setguide", {
-        keyvalue: this.accumulatedValues.length - 1
-      });
-    }
-  },
-  mounted() {
-    this.setGuide();
-  },
-  watch: {
-    values() {
-      this.currentValue = this.formatValue(
-        this.accumulatedValues[this.accumulatedValues.length - 1]
-      );
-    }
-  },
-  computed: {
-    thisYearsTransactions() {
-      const date = this.end;
-      const currentYear = date.getFullYear();
+  });
 
-      const min = new Date(`1/1/${currentYear}`).getTime();
-      const max = date.getTime();
+  const chart = ref();
 
-      const list = this.values.filter(entry => {
-        let time = entry.timestamp;
-        return time >= min && time < max;
-      });
-      return list;
-    },
-    accumulatedValues() {
-      let total = 0;
-      const result = this.thisYearsTransactions.map(
-        entry => (total += parseFloat(entry.amount))
-      );
-      return result;
-    },
-    chart() {
-      return {
-        type: "area",
-        theme: "spark",
-        crosshairX: {
-          alpha: 0,
-          marker: {
-            visible: true,
-            size: 5
-          },
-          plotLabel: {
-            alpha: 0
-          },
-          scaleLabel: {
-            visible: false
-          }
+  function formatValue(value) {
+    return `$${value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+  };
+
+  function changeValue(e) {
+    currentValue.value = formatValue(e.items[0].value);
+  };
+
+  function setGuide() {
+    chart.value.setguide({ keyvalue: accumulatedValues.value.length - 1 });
+  };
+
+  watch(() => props.values, () => {
+    currentValue.value = formatValue(
+      accumulatedValues.value[accumulatedValues.value.length - 1]
+    );
+  });
+
+  let thisYearsTransactions = computed(() => {
+    const date = props.end;
+    const currentYear = date.getFullYear();
+
+    const min = new Date(`1/1/${currentYear}`).getTime();
+    const max = date.getTime();
+
+    const list = props.values.filter(entry => {
+      let time = entry.timestamp;
+      return time >= min && time < max;
+    });
+    return list;
+  });
+
+  let accumulatedValues = computed(() => {
+    let total = 0;
+    const result = thisYearsTransactions.value.map(
+      entry => (total += parseFloat(entry.amount))
+    );
+    return result;
+  });
+
+  let chartConfig = computed(() => {
+    return {
+      type: 'area',
+      theme: 'spark',
+      crosshairX: {
+        alpha: 0,
+        marker: {
+          visible: true,
+          size: 5
         },
-        plotarea: {
-          margin: "15px"
+        plotLabel: {
+          alpha: 0
         },
-        plot: {
-          lineWidth: 3,
-          rules: [
-            {
-              rule: "%v > 0",
-              "line-color": "#04A3F5"
-            },
-            {
-              rule: "%v < 0",
-              "line-color": "#295A73"
-            }
-          ]
-        },
-        tooltip: {
+        scaleLabel: {
           visible: false
-        },
-        series: [
+        }
+      },
+      plotarea: {
+        margin: '15px'
+      },
+      plot: {
+        lineWidth: 3,
+        rules: [
           {
-            values: this.accumulatedValues,
-            lineColor: "#04A3F5"
+            rule: '%v > 0',
+            lineColor: '#04A3F5'
+          },
+          {
+            rule: '%v < 0',
+            lineColor: '#295A73'
           }
         ]
-      };
-    }
-  },
-  data() {
-    return {
-      currentValue: null
+      },
+      tooltip: {
+        visible: false
+      },
+      series: [
+        {
+          values: accumulatedValues.value,
+          lineColor: '#04A3F5'
+        }
+      ]
     };
-  }
-};
+  });
+
+  let currentValue = ref(formatValue(
+    accumulatedValues.value[accumulatedValues.value.length - 1]
+  ));
+
+  onMounted(() => {
+    setGuide();
+  });
 </script>
 
-<style scoped>
-</style>
+<template>
+  <div class="scorecard" @mouseleave="setGuide">
+    <ZingChart
+      ref="chart"
+      :data="chartConfig"
+      :values="accumulatedValues"
+      :width="100"
+      :height="50"
+      @guideMousemove="changeValue"
+    />
+    <div class="scorecard__value">{{currentValue}}</div>
+    <div class="scorecard__header">Total Sales this Year</div>
+  </div>
+</template>
